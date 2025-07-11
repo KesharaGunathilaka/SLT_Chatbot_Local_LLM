@@ -136,9 +136,10 @@ const SLTChatbot = () => {
                       <User className="w-5 h-5 mt-0.5 text-white flex-shrink-0" />
                     )}
                     <div className="flex-1">
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {message.text}
-                      </div>
+                      <div
+                        className="whitespace-pre-wrap text-sm leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: message.text }}
+                      />
                       <div className={`text-xs mt-2 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
                         }`}>
                         {message.timestamp.toLocaleTimeString([], {

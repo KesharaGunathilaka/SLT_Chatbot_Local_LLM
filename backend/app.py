@@ -5,6 +5,7 @@ import os
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from llm_ollama import query_ollama
+import re
 
 
 app = Flask(__name__)
@@ -40,6 +41,13 @@ def find_relevant_pages(query, top_n=3):
     scored = [(score_relevance(query, data), url, data)
               for url, data in INDEX.items()]
     return sorted([s for s in scored if s[0] > 0], reverse=True)[:top_n]
+
+
+def convert_links_to_html(text):
+    # Turn any plain URL into clickable link
+    url_pattern = re.compile(r'(https?://[^\s)]+)')
+    return url_pattern.sub(r'<a href="\1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">\1</a>', text)
+
 
 # -------------------------------
 # 📍 Location Handling
@@ -188,7 +196,7 @@ You are an expert assistant for Sri Lanka Telecom (SLT), helping users with thei
 Answer:
 """
         answer = query_ollama(prompt)
-        return jsonify({"reply": answer})
+        return jsonify({"reply": convert_links_to_html(answer)})
 
     except Exception as e:
         return jsonify({"error": f"❌ Server error: {str(e)}"}), 500

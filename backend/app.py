@@ -23,11 +23,8 @@ except Exception as e:
     print(f"❌ Error loading data: {e}")
     BRANCHES, INDEX = [], {}
 
-# -------------------------------
-# 🔍 Search & Scoring Logic
-# -------------------------------
 
-
+#  Search & Scoring Logic
 def score_relevance(query, data):
     query_words = query.lower().split()
     text = data.get("text", "").lower()
@@ -49,11 +46,7 @@ def convert_links_to_html(text):
     return url_pattern.sub(r'<a href="\1" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">\1</a>', text)
 
 
-# -------------------------------
-# 📍 Location Handling
-# -------------------------------
-
-
+#  Location Handling
 def find_nearest_branches(user_coords, branches, top_n=3):
     distances = []
     for branch in branches:
@@ -102,11 +95,8 @@ def location_response(user_input):
     except Exception as e:
         return f"❌ Location detection error: {str(e)}"
 
-# -------------------------------
-# 🤖 Main Chat Endpoint
-# -------------------------------
 
-
+# Main Chat Endpoint
 @app.route("/chat", methods=["POST"])
 def chat():
     try:
@@ -201,10 +191,8 @@ Answer:
     except Exception as e:
         return jsonify({"error": f"❌ Server error: {str(e)}"}), 500
 
-# -------------------------------
-# ✅ Health Check Route
-# -------------------------------
 
+# Health Check Route
 
 @app.route("/", methods=["GET"])
 def health():
@@ -215,9 +203,7 @@ def health():
     })
 
 
-# -------------------------------
-# 🚀 Start Flask
-# -------------------------------
+# Start Flask
 if __name__ == "__main__":
     print("🚀 SLT Assistant API starting...")
     app.run(host="0.0.0.0", port=5000, debug=True)

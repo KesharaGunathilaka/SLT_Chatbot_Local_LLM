@@ -107,7 +107,7 @@ def chat():
         if not user_input:
             return jsonify({"error": "❌ Empty message provided."}), 400
 
-        # 1. Casual chat (hi, thanks, etc.)
+        # 1. Casual chat
         casual_replies = {
             "hello": "👋 Hello! How can I help you today?",
             "hi": "Hi there! 😊 Ask me anything about SLT services.",

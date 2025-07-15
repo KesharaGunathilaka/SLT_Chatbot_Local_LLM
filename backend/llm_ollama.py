@@ -2,6 +2,7 @@ import requests
 
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 
+#OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 
 def query_ollama(prompt, model="llama3.1"):
     payload = {

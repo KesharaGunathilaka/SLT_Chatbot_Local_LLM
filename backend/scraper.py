@@ -13,7 +13,7 @@ from tqdm import tqdm
 BASE_URL = "https://www.slt.lk"
 VISITED, DATA = set(), {}
 FAILED_IMAGES = set()
-MAX_DEPTH, TIMEOUT = 5, 1800  # seconds
+MAX_DEPTH, TIMEOUT = 8, 2000  # seconds
 start_time = time.time()
 
 

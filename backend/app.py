@@ -180,7 +180,8 @@ You are an expert assistant for Sri Lanka Telecom (SLT), helping users with thei
 🎯 Instructions:
 - Provide a clear, helpful answer based on this context.
 - Use bullet points, emojis, or short paragraphs if useful.
-- If relevant, include links to the SLT site.
+- Always include the source SLT webpage URL (from the context) when possible.
+- Format links like this: [Visit Page](https://www.slt.lk/...)
 - If no answer is possible, say so kindly.
 
 Answer:

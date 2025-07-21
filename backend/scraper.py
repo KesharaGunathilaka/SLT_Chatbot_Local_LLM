@@ -58,8 +58,11 @@ def crawl(url, depth=0):
                 ocr = extract_ocr(urljoin(url, src))
                 if ocr:
                     ocrs.append(ocr)
-        full = text + "\n" + "\n".join(img['text']
-                                       for img in ocrs if img['text'])
+        full = f"Page URL: {url}\n\n{text}\n\nOCR Content:\n" + \
+            "\n".join(img['text'] for img in ocrs if img['text'])
+
+        # full = text + "\n" + "\n".join(img['text']
+        #                                for img in ocrs if img['text'])
         # summary = query_ollama(
         #     f"Summarize this page in bullet points:\n\n{full}")
         DATA[url] = {

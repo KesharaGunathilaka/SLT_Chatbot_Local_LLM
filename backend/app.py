@@ -1,3 +1,4 @@
+import re
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
@@ -5,8 +6,6 @@ import os
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from llm_ollama import query_ollama
-import re
-
 
 app = Flask(__name__)
 user_sessions = {}

@@ -5,7 +5,9 @@ import json
 import os
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
-from llm_ollama import query_ollama
+# from llm_groq import query_groq as query_llm
+from llm_ollama import query_ollama as query_llm
+from vector_store import query_similar_docs
 
 app = Flask(__name__)
 user_sessions = {}
@@ -34,9 +36,8 @@ def score_relevance(query, data):
 
 
 def find_relevant_pages(query, top_n=3):
-    scored = [(score_relevance(query, data), url, data)
-              for url, data in INDEX.items()]
-    return sorted([s for s in scored if s[0] > 0], reverse=True)[:top_n]
+    results = query_similar_docs(query, top_k=top_n)
+    return [(1, id_, {"text": doc}) for id_, doc in zip(results["ids"][0], results["documents"][0])]
 
 
 def convert_links_to_html(text):
@@ -185,7 +186,7 @@ You are an expert assistant for Sri Lanka Telecom (SLT), helping users with thei
 
 Answer:
 """
-        answer = query_ollama(prompt)
+        answer = query_llm(prompt)
         return jsonify({"reply": convert_links_to_html(answer)})
 
     except Exception as e:

@@ -1,3 +1,5 @@
+# scraper.py
+
 import os
 import json
 import time
@@ -7,13 +9,13 @@ from urllib.parse import urljoin, urlparse, urlunparse
 from PIL import Image
 from io import BytesIO
 import pytesseract
-from llm_ollama import query_ollama
 from tqdm import tqdm
+from vector_store import index_data  # ✅ NEW: For vector DB
 
 BASE_URL = "https://www.slt.lk"
 VISITED, DATA = set(), {}
 FAILED_IMAGES = set()
-MAX_DEPTH, TIMEOUT = 8, 2000  # seconds
+MAX_DEPTH, TIMEOUT = 8, 3600  # seconds
 start_time = time.time()
 
 
@@ -61,15 +63,12 @@ def crawl(url, depth=0):
         full = f"Page URL: {url}\n\n{text}\n\nOCR Content:\n" + \
             "\n".join(img['text'] for img in ocrs if img['text'])
 
-        # full = text + "\n" + "\n".join(img['text']
-        #                                for img in ocrs if img['text'])
-        # summary = query_ollama(
-        #     f"Summarize this page in bullet points:\n\n{full}")
         DATA[url] = {
             "title": soup.title.string if soup.title else url,
             "text": full,
             "ocr_images": ocrs
         }
+
         for a in soup.find_all("a", href=True):
             crawl(urljoin(url, a["href"]), depth+1)
     except Exception as e:
@@ -81,4 +80,10 @@ if __name__ == "__main__":
     os.makedirs("data", exist_ok=True)
     with open("data/index.json", "w", encoding="utf8") as f:
         json.dump(DATA, f, ensure_ascii=False, indent=2)
-    print(f"✅ Finished. {len(DATA)} pages saved.")
+
+    print(f"✅ Scraping done. {len(DATA)} pages saved.")
+
+    # ✅ Vector indexing step
+    print("📦 Indexing pages to ChromaDB...")
+    index_data(DATA)
+    print("✅ Indexing complete.")

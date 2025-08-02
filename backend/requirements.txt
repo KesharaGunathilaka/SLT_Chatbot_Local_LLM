@@ -6,3 +6,6 @@ pytesseract
 requests
 beautifulsoup4
 Pillow
+crawl4ai
+chromadb 
+sentence-transformers

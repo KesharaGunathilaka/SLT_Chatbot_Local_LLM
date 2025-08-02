@@ -1,74 +1,113 @@
 import asyncio
-from urllib.parse import urldefrag
-from crawl4ai import (
-    AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode,
-    MemoryAdaptiveDispatcher
-)
+import os
+import json
+from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, LLMConfig, LLMContentFilter, DefaultMarkdownGenerator
+from crawl4ai import JsonCssExtractionStrategy
+from dotenv import load_dotenv
+from crawl4ai import LLMExtractionStrategy
+from pydantic import BaseModel
+from typing import Optional
+
+load_dotenv()
 
 
-async def crawl_recursive_batch(start_urls, max_depth=5, max_concurrent=4):
-    browser_config = BrowserConfig(headless=True, verbose=False)
+class PackageInfo(BaseModel):
+    package_name: str
+    monthly_rental: Optional[str]
+    installation_fee: Optional[str]
+    channels: Optional[str]
+    tariff_code: Optional[str]
+    validity: Optional[str]
+
+
+async def main():
+
+    # 1. Browser configuration
+    browser_config = BrowserConfig()
+
+    # 2. LLM extraction strategy
+#     llm_strategy = LLMExtractionStrategy(
+#         llm_config=LLMConfig(provider="gemini/gemini-2.0-flash",
+#                              api_token=os.getenv("GEMINI_API_KEY")),
+#         schema=PackageInfo.model_json_schema(),  # Or use model_json_schema()
+#         extraction_type="schema",
+
+#         instruction="""
+#         Focus on extracting the *core package information* from the SLT PEO TV "Packages & Charges" page.
+
+# Include:
+# - Package name (e.g. PEO Lite, PEO Titanium)
+# - Monthly rental
+# - Installation or connection charges (if shown)
+# - Any channel‑count or bundled features present (like number of channels)
+# - Tariff names and TRC approval details (if in listing)
+# - Validity (monthly, annual, etc.)
+
+# Exclude:
+# - All navigation, header, sidebar, footer, site menus, cookie notices
+# - Advertisements or “Buy” buttons
+# - Images, page branding, icons, irrelevant promotion
+# - Download links or PDFs (unless package info visible in main content)
+
+# Output as clean Markdown:
+# - Use headings like `## Package: PEO Lite`
+# - Present each package as a section
+# - Provide key fields in a bullet list
+# - Wrap any code or tabular content in Markdown code blocks or tables
+#         """,
+#         chunk_token_threshold=1000,
+#         overlap_rate=0.0,
+#         apply_chunking=True,
+#         input_format="markdown",   # or "html", "fit_markdown"
+#         extra_args={"temperature": 0.0, "max_tokens": 800}
+#     )
+
+    # 3) Crawler run config: skip cache, use extraction
     run_config = CrawlerRunConfig(
-        cache_mode=CacheMode.BYPASS,
-        stream=False
+        # Content filtering
+        # extraction_strategy=llm_strategy,
+        # excluded_tags=['form', 'header', 'footer'],
+        # enable_rate_limiting=False,
+        # rate_limit_config=None,
+        # memory_threshold_percent=70.0,
+        # check_interval=1.0,
+        # max_session_permit=20,
+        # wait_for="js:() => window.loaded === true",
+        # display_mode=None,
+        # exclude_external_links=True,
     )
-    dispatcher = MemoryAdaptiveDispatcher(
-        memory_threshold_percent=70.0,
-        check_interval=1.0,
-        max_session_permit=max_concurrent
-    )
-
-    visited = set()
-
-    def normalize_url(url):
-        return urldefrag(url)[0]
-    current_urls = set([normalize_url(u) for u in start_urls])
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
-        for depth in range(max_depth):
-            print(f"\n=== Crawling Depth {depth+1} ===")
-            urls_to_crawl = [normalize_url(
-                url) for url in current_urls if normalize_url(url) not in visited]
 
-            if not urls_to_crawl:
-                break
+        url = "https://www.slt.lk/en/personal/peo-tv/packages-and-charges"
 
-            results = await crawler.arun_many(
-                urls=urls_to_crawl,
-                config=run_config,
-                dispatcher=dispatcher
-            )
+        result = await crawler.arun(
+            url=url,
+            config=run_config
+        )
 
-            next_level_urls = set()
+        if result.success:
+            # Print clean content
+            print("Content:", result.markdown)
 
-            for result in results:
-                norm_url = normalize_url(result.url)
-                visited.add(norm_url)  # Mark as visited (no fragment)
-                if result.success:
-                    print(
-                        f"[OK] {result.url} | Markdown: {len(result.markdown) if result.markdown else 0} chars")
-                    # Collect all new internal links for the next depth
-                    for link in result.links.get("internal", []):
-                        next_url = normalize_url(link["href"])
-                        if next_url not in visited:
-                            next_level_urls.add(next_url)
-                else:
-                    print(f"[ERROR] {result.url}: {result.error_message}")
+            # llm_strategy.show_usage()
 
-            # Move to the next set of URLs for the next recursion depth
-            current_urls = next_level_urls
+        # ✅ Save result.markdown to a JSON file
+            scraped_data = {
+                "url": url,
+                "content": result.markdown
+            }
 
-# if __name__ == "__main__":
-#     asyncio.run(crawl_recursive_batch(
-#         ["https://www.slt.lk/home"], max_depth=5, max_concurrent=4))
+            # Save to JSON file
+            output_path = "../data/slt.json"
+
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(scraped_data, f, ensure_ascii=False, indent=4)
+
+            print(f"✅ Markdown saved to: {output_path}")
+
+        else:
+            print(f"Crawl failed: {result.error_message}")
 
 if __name__ == "__main__":
-    timeout_seconds = 300
-    try:
-        asyncio.run(asyncio.wait_for(
-            crawl_recursive_batch(
-                ["https://www.slt.lk/home"], max_depth=5, max_concurrent=4),
-            timeout=timeout_seconds
-        ))
-    except asyncio.TimeoutError:
-        print(f"❌ Crawl timed out after {timeout_seconds} seconds.")
+    asyncio.run(main())

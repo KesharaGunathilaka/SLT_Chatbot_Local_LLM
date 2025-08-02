@@ -9,3 +9,5 @@ Pillow
 crawl4ai
 chromadb 
 sentence-transformers
+aiofiles 
+pydantic

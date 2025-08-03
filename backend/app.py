@@ -15,9 +15,20 @@ CORS(app)
 try:
     with open("data/branches.json", encoding="utf8") as f:
         BRANCHES = json.load(f)
-    with open("data/index.json", encoding="utf8") as f:
-        INDEX = json.load(f)
-    print(f"✅ Loaded {len(INDEX)} scraped pages and {len(BRANCHES)} branches.")
+    # with open("data/index.json", encoding="utf8") as f:
+    #     INDEX = json.load(f)
+
+    with open("scrape/slt_data.md", encoding="utf8") as f:
+        markdown_text = f.read()
+
+        INDEX = {
+            "slt_data.md": {
+                "text": markdown_text,
+                "ocr_images": []
+            }
+        }
+
+    # print(f"✅ Loaded {len(INDEX)} scraped pages and {len(BRANCHES)} branches.")
 except Exception as e:
     print(f"❌ Error loading data: {e}")
     BRANCHES, INDEX = [], {}
